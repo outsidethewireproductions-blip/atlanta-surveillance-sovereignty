@@ -476,15 +476,54 @@
     background: rgba(255, 255, 255, 0.94);
     border: 1px solid var(--line);
     border-radius: 4px;
-    padding: 8px 12px;
     backdrop-filter: blur(4px);
     z-index: 10;
-    display: flex; flex-direction: column; gap: 4px;
     box-shadow: 0 1px 2px rgba(10, 22, 40, 0.06);
+    overflow: hidden;
+    min-width: 200px;
+  }
+  .layer-head {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    user-select: none;
+  }
+  .layer-head:hover { background: rgba(184, 144, 47, 0.08); }
+  .layer-head-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--paper);
+    font-weight: 700;
+  }
+  .layer-head-chev {
+    color: var(--gold);
+    font-size: 12px;
+    line-height: 1;
+    transition: transform .25s ease;
+  }
+  .layer-toggles.collapsed .layer-head-chev { transform: rotate(-90deg); }
+  .layer-body {
+    padding: 4px 12px 10px;
+    display: flex; flex-direction: column; gap: 4px;
+    max-height: 400px;
+    overflow: hidden;
+    transition: max-height .3s cubic-bezier(.2,.7,.2,1), padding .3s ease;
+    border-top: 1px solid var(--line);
+  }
+  .layer-toggles.collapsed .layer-body {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-top-color: transparent;
   }
   .layer-toggles .ltitle {
     font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--paper-mute); margin-bottom: 4px;
+    color: var(--paper-mute); margin-bottom: 4px; margin-top: 4px;
     font-weight: 700;
   }
   .layer-toggle {
@@ -1941,15 +1980,21 @@
       <div class="map-canvas" id="map-canvas">
 
         <div class="layer-toggles" id="layer-toggles">
-          <div class="ltitle">View</div>
-          <label class="layer-toggle"><input type="radio" name="view" data-view="satellite" checked /> Satellite (helicopter view)</label>
-          <label class="layer-toggle"><input type="radio" name="view" data-view="streets" /> Streets</label>
-          <label class="layer-toggle"><input type="radio" name="view" data-view="hybrid" /> Hybrid</label>
-          <div class="ltitle" style="margin-top:8px">Overlays</div>
-          <label class="layer-toggle"><input type="checkbox" data-overlay="zones" checked /> Neighborhoods</label>
-          <label class="layer-toggle"><input type="checkbox" data-overlay="landmarks" checked /> Landmarks</label>
-          <label class="layer-toggle"><input type="checkbox" data-overlay="heat" /> Heat overlay</label>
-          <label class="layer-toggle"><input type="checkbox" data-overlay="live" checked /> Live Activity (sim)</label>
+          <button type="button" class="layer-head" id="layer-head" aria-expanded="true">
+            <span class="layer-head-text">View &amp; overlays</span>
+            <span class="layer-head-chev">&#9662;</span>
+          </button>
+          <div class="layer-body" id="layer-body">
+            <div class="ltitle">View</div>
+            <label class="layer-toggle"><input type="radio" name="view" data-view="satellite" checked /> Satellite (helicopter view)</label>
+            <label class="layer-toggle"><input type="radio" name="view" data-view="streets" /> Streets</label>
+            <label class="layer-toggle"><input type="radio" name="view" data-view="hybrid" /> Hybrid</label>
+            <div class="ltitle" style="margin-top:8px">Overlays</div>
+            <label class="layer-toggle"><input type="checkbox" data-overlay="zones" checked /> Neighborhoods</label>
+            <label class="layer-toggle"><input type="checkbox" data-overlay="landmarks" checked /> Landmarks</label>
+            <label class="layer-toggle"><input type="checkbox" data-overlay="heat" /> Heat overlay</label>
+            <label class="layer-toggle"><input type="checkbox" data-overlay="live" checked /> Live Activity (sim)</label>
+          </div>
         </div>
 
         <div class="map-controls">
@@ -2528,6 +2573,13 @@
       document.getElementById('modal-challenge-section').style.display = 'none';
       shade.classList.add('open');
     });
+  });
+
+  // Collapsible View & overlays panel.
+  var layerToggles = document.getElementById('layer-toggles');
+  document.getElementById('layer-head').addEventListener('click', function () {
+    var collapsed = layerToggles.classList.toggle('collapsed');
+    this.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
   });
 
   // Overlay toggle.
@@ -3309,9 +3361,11 @@
     if (soundEnabled) { ensureAudio(); soundSubmit(); }
   });
 
-  // Global click ripple + tone via event delegation.
+  // Global click ripple + tone via event delegation. Section-switching elements
+  // (drop heads, layer-panel header, modal close) are excluded.
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('button, .chip, .sec-cert, .sim-suggestion, .heat-row, .check-row, .phase, .wd-card, .gauge, .nb-zone');
+    if (btn && btn.closest('.layer-head, .drop-toggle, .modal-close, .sp-close, .drop-head')) return;
     if (btn && btn !== e.currentTarget) {
       // Ripple
       var rect = btn.getBoundingClientRect();
