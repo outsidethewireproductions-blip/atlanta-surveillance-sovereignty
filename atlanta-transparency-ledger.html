@@ -183,7 +183,7 @@
 
   /* Collapsible drops */
   .drops {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    display: grid; grid-template-columns: 1fr; gap: 10px;
     margin-bottom: 18px;
   }
   .drop {
@@ -422,11 +422,19 @@
   .section-head h2::before { content: ''; width: 24px; height: 1px; background: var(--gold); }
   .section-head .meta { color: var(--paper-mute); font-size: 12px; }
 
-  /* Atlanta map */
+  /* Atlanta map (now stacked: map → recent activity → query density) */
   .ops-grid {
-    display: grid; grid-template-columns: 2.4fr 1fr;
+    display: grid; grid-template-columns: 1fr;
     gap: 12px; margin-bottom: 28px;
   }
+  .recent-activity {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(10, 22, 40, 0.04);
+  }
+  .recent-activity .feed { max-height: 320px; }
   .map-panel {
     background: var(--panel);
     border: 1px solid var(--line);
@@ -2014,6 +2022,26 @@
       </div>
     </div>
 
+    <!-- Recent camera activity (always visible, between map and query density) -->
+    <div class="recent-activity">
+      <div class="map-head">
+        <h3>Recent camera activity</h3>
+        <div class="map-legend">
+          <span class="pill live">Live</span>
+          <span style="font-family: var(--mono); font-size: 11px; color: var(--paper-mute);"><strong id="live-counter">14</strong> recent &middot; <strong id="live-recent">14</strong> visible</span>
+        </div>
+      </div>
+      <div class="feed-controls">
+        <button class="chip active" data-tier="all">All</button>
+        <button class="chip" data-tier="1">T1 Instant</button>
+        <button class="chip" data-tier="2">T2 Warrant</button>
+        <button class="chip" data-tier="3">T3 Board</button>
+        <button class="chip" data-tier="4">T4 Denied</button>
+        <input type="text" class="feed-search" id="feed-search" placeholder="Search queries..." />
+      </div>
+      <div class="feed" id="feed" aria-live="polite"></div>
+    </div>
+
     <div class="heatmap">
       <div class="map-head">
         <h3>Query Density</h3>
@@ -2135,32 +2163,6 @@
       </div>
     </div>
 
-    <div class="drop open" id="drop-live">
-      <div class="drop-head" data-drop="live">
-        <div class="lhs">
-          <h3>Recent camera activity</h3>
-          <div class="summary">
-            <span class="pill live">Live</span>
-            <span><strong id="live-counter">14</strong> recent lookups</span>
-            <span><strong id="live-recent">14</strong> visible</span>
-          </div>
-        </div>
-        <button class="drop-toggle" aria-label="Expand">&#9662;</button>
-      </div>
-      <div class="drop-body">
-        <div class="live-detail">
-          <div class="feed-controls">
-            <button class="chip active" data-tier="all">All</button>
-            <button class="chip" data-tier="1">T1 Instant</button>
-            <button class="chip" data-tier="2">T2 Warrant</button>
-            <button class="chip" data-tier="3">T3 Board</button>
-            <button class="chip" data-tier="4">T4 Denied</button>
-            <input type="text" class="feed-search" id="feed-search" placeholder="Search queries..." />
-          </div>
-          <div class="feed" id="feed" aria-live="polite"></div>
-        </div>
-      </div>
-    </div>
   </div>
 
 
@@ -2638,8 +2640,9 @@
       currentSearch = name.toLowerCase();
       applyFilters();
     }
-    var liveDrop = document.getElementById('drop-live');
-    if (liveDrop && !liveDrop.classList.contains('open')) liveDrop.classList.add('open');
+    // Recent activity is now a permanent panel, no drop to open.
+    var feed = document.getElementById('feed');
+    if (feed) feed.scrollTop = 0;
   }
   document.getElementById('selection-close').addEventListener('click', function () {
     clearSelection();
